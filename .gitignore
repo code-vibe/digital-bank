@@ -1,0 +1,21 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Rust
+target/
+
+# IDE
+.idea/
+
+# Obsidian
+.obsidian/
+
+# Private documentation
+#Remove later
+docs/
+
+# OS
+.DS_Store
+Thumbs.db
