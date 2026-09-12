@@ -1,5 +1,14 @@
 # DigitalBank
 
+## Local development
+
+Start PostgreSQL:
+```bash
+docker compose up -d
+sqlx migrate run
+cargo run -p api
+curl http://127.0.0.1:8080/healthz
+```
 
 ## Docs map
 
