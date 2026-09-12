@@ -12,8 +12,7 @@ target/
 # Obsidian
 .obsidian/
 
-# Private documentation
-#Remove later
+# Private documentation (publish when ready)
 docs/
 
 # OS
