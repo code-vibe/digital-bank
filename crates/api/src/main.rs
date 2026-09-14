@@ -13,7 +13,7 @@ async fn main() {
     info!("tracing initialized");
 
     let config = Config::from_env();
-    let address = Config::bind_address(&config);
+    let address = config.bind_address();
 
     let pool = PgPoolOptions::new()
         .max_connections(5)

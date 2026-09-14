@@ -1,3 +1,3 @@
 [workspace]
-members = ["crates/platform", "crates/api"]
+members = ["crates/platform", "crates/api", "crates/identity"]
 resolver = "3"
