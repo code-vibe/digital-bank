@@ -1,11 +1,15 @@
 use axum::Router;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::routing::get;
+use axum::routing::{get, post};
 use platform::Config;
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use tracing::info;
+
+use axum::Json;
+use identity::{RegisterRequest, register as other_register};
+use serde::Deserialize;
 
 #[tokio::main]
 async fn main() {
@@ -23,6 +27,7 @@ async fn main() {
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
+        .route("/register", post(register))
         .with_state(pool.clone());
 
     let listener = tokio::net::TcpListener::bind(&address)
@@ -45,4 +50,19 @@ async fn readyz(State(pool): State<PgPool>) -> Result<&'static str, StatusCode> 
         .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
 
     Ok("OK")
+}
+
+//#[axum::debug_handler]
+async fn register(State(pool): State<PgPool>, Json(request): Json<RegisterRequest>, ) -> Result<Json<identity::RegisterResponse>, StatusCode> {
+
+    let input = RegisterRequest {
+        email: request.email,
+        password: request.password,
+    };
+
+    let user = identity::register(&pool, input)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(user))
 }

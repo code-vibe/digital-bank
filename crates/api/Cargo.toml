@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = "0.8"
+axum = { version = "0.8", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 sqlx = { version = "0.8", features = ["postgres", "runtime-tokio"] }
 
 platform = { path = "../platform" }
+identity = { path = "../identity" }
+serde = { version = "1.0.229", features = ["derive"] }

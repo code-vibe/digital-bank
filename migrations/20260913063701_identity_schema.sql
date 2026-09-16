@@ -56,19 +56,7 @@ CREATE TABLE refresh_tokens (
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-INSERT INTO roles (code, name) VALUES
-    ('customer', 'Customer'),
-    ('ops_maker', 'Ops Maker'),
-    ('ops_checker', 'Ops Checker');
 
-INSERT INTO permissions (code) VALUES
-    ('identity:self'),
-    ('accounts:read'),
-    ('accounts:open'),
-    ('transfers:create'),
-    ('ops:transfers:read'),
-    ('ops:actions:propose'),
-    ('ops:actions:approve');
 
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
