@@ -25,4 +25,18 @@ async fn registers_customer(pool: sqlx::PgPool) {
         .unwrap();
 
     assert_eq!(role, "customer");
+    let password_hash: String = sqlx::query_scalar(
+        r#"
+    SELECT password_hash
+    FROM users
+    WHERE id = $1
+    "#,
+    )
+        .bind(user.id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+
+    assert_ne!(password_hash, "secret123");
+    assert!(password_hash.starts_with("$argon2id$"));
 }
