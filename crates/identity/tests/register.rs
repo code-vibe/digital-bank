@@ -40,3 +40,23 @@ async fn registers_customer(pool: sqlx::PgPool) {
     assert_ne!(password_hash, "secret123");
     assert!(password_hash.starts_with("$argon2id$"));
 }
+
+
+#[sqlx::test(migrations = "../../migrations")]
+async fn rejects_duplicate_email(pool: sqlx::PgPool) {
+    let input = RegisterRequest {
+        email: "sam@example.com".to_string(),
+        password: "secret123".to_string(),
+    };
+
+    register(&pool, input).await.unwrap();
+
+    let duplicate = RegisterRequest {
+        email: "sam@example.com".to_string(),
+        password: "another-password".to_string(),
+    };
+
+    let result = register(&pool, duplicate).await;
+
+    assert!(matches!(result,Err(identity::IdentityError::EmailAlreadyExists)));
+}

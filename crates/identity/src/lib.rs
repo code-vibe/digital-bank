@@ -32,7 +32,16 @@ pub async fn register(
         .bind(&request.email)
         .bind(hashed_password)
         .execute(&mut *tx)
-        .await?;
+        .await
+        .map_err(|error| {
+            if let sqlx::Error::Database(database_error) = &error {
+                if database_error.code().as_deref() == Some("23505") {
+                    return IdentityError::EmailAlreadyExists;
+                }
+            }
+
+            IdentityError::Database(error)
+        })?;
 
     //Used query Scaler for performance
     //Instead of fetching the whole db role, we get value from the first column
@@ -91,6 +100,9 @@ fn verify_password(
 
 #[derive(Debug, thiserror::Error)]
 pub enum IdentityError {
+    #[error("email already exists")]
+    EmailAlreadyExists,
+
     #[error("password hashing failed: {0}")]
     PasswordHash(String),
 

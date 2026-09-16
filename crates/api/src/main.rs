@@ -62,7 +62,11 @@ async fn register(State(pool): State<PgPool>, Json(request): Json<RegisterReques
 
     let user = identity::register(&pool, input)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+        .map_err(|error| match error {
+            identity::IdentityError::EmailAlreadyExists => StatusCode::CONFLICT,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
+        })?;
 
+    
     Ok(Json(user))
 }
