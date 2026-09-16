@@ -1,4 +1,4 @@
-use identity::{register, RegisterRequest};
+use identity::{RegisterRequest, register};
 
 #[sqlx::test(migrations = "../../migrations")]
 async fn registers_customer(pool: sqlx::PgPool) {
@@ -19,10 +19,10 @@ async fn registers_customer(pool: sqlx::PgPool) {
         WHERE ur.user_id = $1
         "#,
     )
-        .bind(user.id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    .bind(user.id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
 
     assert_eq!(role, "customer");
     let password_hash: String = sqlx::query_scalar(
@@ -32,15 +32,14 @@ async fn registers_customer(pool: sqlx::PgPool) {
     WHERE id = $1
     "#,
     )
-        .bind(user.id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    .bind(user.id)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
 
     assert_ne!(password_hash, "secret123");
     assert!(password_hash.starts_with("$argon2id$"));
 }
-
 
 #[sqlx::test(migrations = "../../migrations")]
 async fn rejects_duplicate_email(pool: sqlx::PgPool) {
@@ -58,5 +57,8 @@ async fn rejects_duplicate_email(pool: sqlx::PgPool) {
 
     let result = register(&pool, duplicate).await;
 
-    assert!(matches!(result,Err(identity::IdentityError::EmailAlreadyExists)));
+    assert!(matches!(
+        result,
+        Err(identity::IdentityError::EmailAlreadyExists)
+    ));
 }

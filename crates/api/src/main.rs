@@ -53,8 +53,10 @@ async fn readyz(State(pool): State<PgPool>) -> Result<&'static str, StatusCode> 
 }
 
 //#[axum::debug_handler]
-async fn register(State(pool): State<PgPool>, Json(request): Json<RegisterRequest>, ) -> Result<Json<identity::RegisterResponse>, StatusCode> {
-
+async fn register(
+    State(pool): State<PgPool>,
+    Json(request): Json<RegisterRequest>,
+) -> Result<Json<identity::RegisterResponse>, StatusCode> {
     let input = RegisterRequest {
         email: request.email,
         password: request.password,
@@ -67,6 +69,5 @@ async fn register(State(pool): State<PgPool>, Json(request): Json<RegisterReques
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         })?;
 
-    
     Ok(Json(user))
 }
