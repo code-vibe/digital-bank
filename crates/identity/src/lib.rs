@@ -1,9 +1,7 @@
 // Identity domain and authentication use-cases live here.
 
 use argon2::Argon2;
-use argon2::password_hash::{
-    PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng,
-};
+use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -22,7 +20,12 @@ pub async fn register(
     pool: &sqlx::PgPool,
     request: RegisterRequest,
 ) -> Result<RegisterResponse, IdentityError> {
-    let hashed_password = hash_password(&request.password).unwrap();
+    if request.password.is_empty() {
+        return Err(IdentityError::InvalidPassword);
+    }
+
+    let hashed_password = hash_password(&request.password)
+        .map_err(|error| IdentityError::PasswordHash(error.to_string()))?;
 
     let mut tx = pool.begin().await?;
     let user_id = uuid::Uuid::new_v4();
@@ -34,10 +37,10 @@ pub async fn register(
         .execute(&mut *tx)
         .await
         .map_err(|error| {
-            if let sqlx::Error::Database(database_error) = &error {
-                if database_error.code().as_deref() == Some("23505") {
-                    return IdentityError::EmailAlreadyExists;
-                }
+            if let sqlx::Error::Database(database_error) = &error
+                && database_error.code().as_deref() == Some("23505")
+            {
+                return IdentityError::EmailAlreadyExists;
             }
 
             IdentityError::Database(error)
@@ -87,22 +90,13 @@ fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error>
     Ok(password)
 }
 
-fn verify_password(
-    password: &str,
-    hashed_password: &str,
-) -> Result<bool, argon2::password_hash::Error> {
-    let parsed_hash = PasswordHash::new(hashed_password)?;
-
-    Ok(Argon2::default()
-        .verify_password(password.as_bytes(), &parsed_hash)
-        .is_ok())
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum IdentityError {
     #[error("email already exists")]
     EmailAlreadyExists,
 
+    #[error("password cannot be empty")]
+    InvalidPassword,
     #[error("password hashing failed: {0}")]
     PasswordHash(String),
 
@@ -113,6 +107,17 @@ pub enum IdentityError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use argon2::password_hash::{PasswordHash, PasswordVerifier};
+    fn verify_password(
+        password: &str,
+        hashed_password: &str,
+    ) -> Result<bool, argon2::password_hash::Error> {
+        let parsed_hash = PasswordHash::new(hashed_password)?;
+
+        Ok(Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok())
+    }
 
     #[test]
     fn hashes_password() {

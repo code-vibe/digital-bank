@@ -8,8 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use tracing::info;
 
 use axum::Json;
-use identity::{RegisterRequest, register as other_register};
-use serde::Deserialize;
+use identity::RegisterRequest;
 
 #[tokio::main]
 async fn main() {
